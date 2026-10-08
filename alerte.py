@@ -1,45 +1,27 @@
-from twilio.rest import Client
+"""
+ملف alerte.py - نسخة محاكاة (بدون Twilio)
+"""
 
-# ⚠️ ضعي هنا مفاتيحك من Twilio
-ACCOUNT_SID = "ACxxxxxxxxxxxxxxxxxxxxxxxxxx"
-AUTH_TOKEN = "xxxxxxxxxxxxxxxxxxxxxxxxxx"
-TWILIO_NUMBER = "+1xxxxxxxxxx"
+AUDIO_URLS = {
+    "تغيب": "https://raw.githubusercontent.com/clubinfo20252025-byte/EchoSchool/main/audio/ghiyab.mp3",
+    "تأخر": "https://raw.githubusercontent.com/clubinfo20252025-byte/EchoSchool/main/audio/taakhor.mp3",
+    "ملاحظة سلوكية": "https://raw.githubusercontent.com/clubinfo20252025-byte/EchoSchool/main/audio/suluk.mp3"
+}
 
-client = Client(ACCOUNT_SID, AUTH_TOKEN)
-
-def envoyer_sms(numero, message):
-    """إرسال رسالة SMS"""
-    try:
-        msg = client.messages.create(
-            body=message,
-            from_=TWILIO_NUMBER,
-            to=numero
-        )
-        return True, msg.sid
-    except Exception as e:
-        return False, str(e)
-
-def envoyer_appel(numero, url_audio):
-    """إجراء مكالمة صوتية آلية"""
-    try:
-        call = client.calls.create(
-            twiml=f'<Response><Play>{url_audio}</Play></Response>',
-            from_=TWILIO_NUMBER,
-            to=numero
-        )
-        return True, call.sid
-    except Exception as e:
-        return False, str(e)
-
-def alerter_parent(nom, numero, motif, url_audio):
-    """إرسال SMS + مكالمة"""
-    message_sms = f"تنبيه مدرسي: {nom} - {motif}. المرجو التواصل مع المدرسة."
-    sms_ok, sms_info = envoyer_sms(numero, message_sms)
-    call_ok, call_info = envoyer_appel(numero, url_audio)
+def alerter_parent(nom, numero, motif, url_audio=None):
+    """محاكاة إرسال SMS + مكالمة صوتية"""
+    messages = {
+        "تغيب": f"تنبيه مدرسي: {nom} غاب اليوم. المرجو التواصل مع المدرسة.",
+        "تأخر": f"تنبيه مدرسي: {nom} تأخر عن الحصة. المرجو المتابعة.",
+        "ملاحظة سلوكية": f"تنبيه مدرسي: ملاحظة بخصوص {nom}. المرجو التواصل."
+    }
+    
+    message_sms = messages.get(motif, f"تنبيه بخصوص {nom}")
     
     return {
-        'sms': sms_ok,
-        'appel': call_ok,
-        'sms_info': sms_info,
-        'call_info': call_info
+        'sms': True,
+        'appel': True,
+        'sms_info': f"📱 SMS إلى {numero}: {message_sms}",
+        'call_info': f"📞 مكالمة صوتية إلى {numero} بالرسالة: {motif}",
+        'audio_url': url_audio or AUDIO_URLS.get(motif, "")
     }
