@@ -1,5 +1,6 @@
 import streamlit as st
 from database import init_database, get_eleves, enregistrer_alerte, get_alertes
+from alerte import alerter_parent, AUDIO_URLS
 
 # ==================== إعدادات الصفحة ====================
 st.set_page_config(
@@ -7,6 +8,23 @@ st.set_page_config(
     page_icon="📚",
     layout="centered"
 )
+
+st.markdown("""
+    <style>
+    .main { padding: 1rem; }
+    .stButton>button {
+        width: 100%;
+        background-color: #4CAF50;
+        color: white;
+        font-size: 18px;
+        padding: 14px;
+        border-radius: 12px;
+        border: none;
+        font-weight: bold;
+    }
+    h1 { font-size: 26px !important; text-align: center; }
+    </style>
+""", unsafe_allow_html=True)
 
 # ==================== التهيئة ====================
 init_database()
@@ -47,8 +65,15 @@ motif = st.radio(
 st.markdown("---")
 
 if st.button("📤 إرسال التنبيه لولي الأمر", use_container_width=True):
-    enregistrer_alerte(eleve_nom, eleve_tel, motif)
-    st.success(f"✅ تم تسجيل التنبيه لـ {eleve_nom}")
+    url_audio = AUDIO_URLS.get(motif, "")
+    
+    with st.spinner("جاري إرسال التنبيه..."):
+        resultat = alerter_parent(eleve_nom, eleve_tel, motif, url_audio)
+        enregistrer_alerte(eleve_nom, eleve_tel, motif)
+    
+    st.success(f"✅ تم إرسال SMS + مكالمة صوتية لولي أمر {eleve_nom}")
+    st.info(resultat['sms_info'])
+    st.info(resultat['call_info'])
     st.balloons()
 
 # ==================== سجل التنبيهات ====================
